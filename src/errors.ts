@@ -1,15 +1,13 @@
 import status from "statuses";
 
 export class YggdrasilError extends Error {
-    public code: number;
-    public type: string;
+    public status: number;
     public cause?: string;
 
-    constructor(code: number = 500, type?: string, message?: string, cause?: string) {
+    constructor(code: number = 500, name: string = status(code), message: string = "", cause?: string) {
         super(message);
-        this.name = "YggdrasilError";
-        this.code = code;
-        this.type = type ?? status(code);
+        this.name = name;
+        this.status = code;
         this.cause = cause;
     }
 }

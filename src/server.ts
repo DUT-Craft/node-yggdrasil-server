@@ -1,7 +1,7 @@
 import * as crypto from "crypto";
 import Koa from "koa";
 import Router from "@koa/router";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4, stringify } from "uuid";
 
 import {
     UnsignedUUID,
@@ -38,11 +38,20 @@ export interface YggdrasilConfig {
     /** 会话过期时间（毫秒），默认 30 秒 */
     sessionExpiration?: number;
     /** 错误处理 */
-    errorHandler?: (err: Error, ctx: Koa.Context) => void;
+    errorHandler?: (err: YggdrasilError, ctx: Koa.Context) => void;
+}
+
+function unsignedUUIDFromBytes(input: crypto.BinaryLike): UnsignedUUID {
+    let md5Bytes = crypto.createHash('md5').update(input).digest();
+    md5Bytes[6]  &= 0x0f;  /* clear version        */
+    md5Bytes[6]  |= 0x30;  /* set to version 3     */
+    md5Bytes[8]  &= 0x3f;  /* clear variant        */
+    md5Bytes[8]  |= 0x80;  /* set to IETF variant  */
+    return stringify(md5Bytes);
 }
 
 export class YggdrasilProvider {
-    public app: Koa;
+    public readonly app: Koa;
 
     constructor(public config: YggdrasilConfig = {}) {
         this.config = {
@@ -56,32 +65,76 @@ export class YggdrasilProvider {
         this.app = new Koa();
         this.app.context.yggdrasil = this;
         this.app.use(async (ctx, next) => {
-            try {
-                await next();
-            } catch (err) {
+            const onerror = (err: YggdrasilError, ctx: Koa.Context) => {
+                if (this.config.errorHandler) {
+                    this.config.errorHandler(err, ctx);
+                    return;
+                }
+                ctx.status = err.status ?? 500;
+                ctx.body = {
+                    error: err.name,
+                    errorMessage: err.message,
+                    ...(err.cause && { cause: err.cause })
+                };
+            };
 
+            try {
+                ctx.type = "application/json";
+                await next();
+                if (ctx.status === 404) {
+                    ctx.throw(ctx.status);
+                }
+            } catch (err: any) {
+                if (!(err instanceof YggdrasilError)) {
+                    err = new YggdrasilError(err.status ?? 500);
+                }
+                onerror(err, ctx);
             }
         });
 
         const router = new Router();
         // 扩展 API
-        router.get("/", async (ctx) => {});
+        router.get("/", async (ctx) => {
+            ctx.body = this.config.metadata;
+        });
         // 用户部分
-        router.post("/authserver/authenticate", async (ctx) => {});
-        router.post("/authserver/refresh", async (ctx) => {});
-        router.post("/authserver/validate", async (ctx) => {});
-        router.post("/authserver/invalidate", async (ctx) => {});
-        router.post("/authserver/signout", async (ctx) => {});
+        router.post("/authserver/authenticate", async (ctx) => {
+            ctx.throw(501);
+        });
+        router.post("/authserver/refresh", async (ctx) => {
+            ctx.throw(501);
+        });
+        router.post("/authserver/validate", async (ctx) => {
+            ctx.throw(501);
+        });
+        router.post("/authserver/invalidate", async (ctx) => {
+            ctx.throw(501);
+        });
+        router.post("/authserver/signout", async (ctx) => {
+            ctx.throw(501);
+        });
         // 会话部分
-        router.post("/sessionserver/session/minecraft/join", async (ctx) => {});
-        router.get("/sessionserver/session/minecraft/hasJoined", async (ctx) => {});
+        router.post("/sessionserver/session/minecraft/join", async (ctx) => {
+            ctx.throw(501);
+        });
+        router.get("/sessionserver/session/minecraft/hasJoined", async (ctx) => {
+            ctx.throw(501);
+        });
         // 角色部分
-        router.get("/sessionserver/session/minecraft/profile/:uuid", async (ctx) => {});
-        router.post("/api/profiles/minecraft", async (ctx) => {});
+        router.get("/sessionserver/session/minecraft/profile/:uuid", async (ctx) => {
+            ctx.throw(501);
+        });
+        router.post("/api/profiles/minecraft", async (ctx) => {
+            ctx.throw(501);
+        });
         // 材质上传
-        router.put("/api/user/profile/:uuid/:textureType", async (ctx) => {});
-        router.del("/api/user/profile/:uuid/:textureType", async (ctx) => {});
+        router.put("/api/user/profile/:uuid/:textureType", async (ctx) => {
+            ctx.throw(501);
+        });
+        router.del("/api/user/profile/:uuid/:textureType", async (ctx) => {
+            ctx.throw(501);
+        });
         this.app.use(router.routes());
-        this.app.use(router.allowedMethods());
+        this.app.use(router.allowedMethods({ throw: true }));
     }
 }

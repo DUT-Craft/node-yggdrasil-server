@@ -36,13 +36,10 @@ export interface Profile {
     properties?: ProfileProperty[];
 }
 
-/** 材质模型 */
-export type SkinModel = "default" | "slim";
-
 /** 材质元数据 */
 export interface TextureMetadata {
-    /** 材质模型，取值为 SkinModel */
-    model?: SkinModel;
+    /** 材质模型，可选值为 default（正常手臂宽度（4px）的皮肤） 或 slim（细手臂（3px）的皮肤） */
+    model?: "default" | "slim";
     /** 其他自定义元数据 */
     [key: string]: any;
 }
