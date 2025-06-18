@@ -9,6 +9,7 @@ export interface UserProperty {
     value: string;
 }
 
+/** 用户信息 */
 export interface User {
     /** 用户 ID */
     id: UnsignedUUID;
@@ -21,12 +22,12 @@ export interface ProfileProperty {
     /** 属性名称 */
     name: "textures" | "uploadableTextures";
     /** 属性值 */
-    value: string;
+    value: Object | string;
     /** 属性值的数字签名（仅在特定情况下需要包含） */
     signature?: string;
 }
 
-/** 角色基本信息 */
+/** 角色信息 */
 export interface Profile {
     /** 角色 UUID（无符号） */
     id: UnsignedUUID;
@@ -53,7 +54,7 @@ export interface Texture {
 }
 
 /** 材质信息属性 */
-export interface TexturesValue {
+export interface Textures {
     /** 该属性值被生成时的时间戳（unix 时间戳，单位为 ms） */
     timestamp: number;
     /** 角色 UUID（无符号） */
