@@ -1,17 +1,28 @@
 {
     "name": "node-yggdrasil-server",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "A Node.js library implements Mojang authentication (Yggdrasil) server defined by authlib-injector.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "repository": {
         "type": "git",
-        "url": "http://github.com/DUT-Craft/node-yggdrasil-server.git"
+        "url": "https://github.com/DUT-Craft/node-yggdrasil-server.git"
     },
+    "bugs": {
+        "url": "https://github.com/DUT-Craft/node-yggdrasil-server/issues"
+    },
+    "homepage": "https://github.com/DUT-Craft/node-yggdrasil-server",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
+        "run": "ts-node example/skin_server.ts",
         "build": "tsc",
         "lint": "eslint . --ext .ts",
-        "test": "mocha -r ts-node/register test/*.ts"
+        "test": "mocha -r ts-node/register test/*.ts",
+        "prepublishOnly": "npm run build"
     },
     "keywords": [
         "typescript",
